@@ -1,12 +1,15 @@
-﻿namespace MQTTMaui
+﻿using MQTTMaui.ViewModel;
+
+namespace MQTTMaui
 {
     public partial class MainPage : ContentPage
     {
         int count = 0;
 
-        public MainPage()
+        public MainPage(MainPageViewModel vm)
         {
             InitializeComponent();
+            BindingContext = vm;
         }
 
         private void OnCounterClicked(object sender, EventArgs e)

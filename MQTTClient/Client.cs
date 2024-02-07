@@ -7,8 +7,8 @@ namespace MQTTClient
     {
         private NetworkStream networkStream;
         private TcpClient tcpClient;
-        private int _port;
-        private string _brokerAddr;
+        private int _port = 0;
+        private string _brokerAddr = string.Empty;
         private byte[] readBuffer = new byte[1024];
         private bool isThreadCreated;
         public Client(string brokerAddr, int port)
@@ -45,7 +45,6 @@ namespace MQTTClient
             Array.Copy(variableHeader, 0, connectPacket, fixedHeader.Length, variableHeader.Length);
             Array.Copy(payload, 0, connectPacket, fixedHeader.Length + variableHeader.Length, payload.Length);
             SendPacket(connectPacket);
-
         }
         public void Subscribe(string topic, int qos, int packetIdentfier)
         {
@@ -75,6 +74,7 @@ namespace MQTTClient
                 SendPacket(subscribePacket);
                 if (!isThreadCreated)
                 {
+                    isThreadCreated = true;
                     Thread t = new Thread(BeginRead);
                     t.Start();
                 }

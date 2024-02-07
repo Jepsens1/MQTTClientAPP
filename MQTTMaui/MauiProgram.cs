@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using MQTTMaui.ViewModel;
 
 namespace MQTTMaui
 {
@@ -18,7 +19,8 @@ namespace MQTTMaui
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
-
+            builder.Services.AddSingleton<MainPage>();
+            builder.Services.AddSingleton<MainPageViewModel>();
             return builder.Build();
         }
     }

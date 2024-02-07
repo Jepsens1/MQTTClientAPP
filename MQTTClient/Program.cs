@@ -9,8 +9,6 @@
             //client.PingRequest();
             client.Subscribe("example/topic", 0, 10);
             client.Publish("example/topic", 10, 0, "Hello");
-
-
             //client.Disconnect();
         }
     }
