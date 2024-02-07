@@ -8,7 +8,7 @@
     Title="MQTTMaui">
 
     <ShellContent
-        Title="Home"
+        Title="MQTT Client"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
 

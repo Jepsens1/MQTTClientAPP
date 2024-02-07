@@ -16,35 +16,44 @@ namespace MQTTClient
             _brokerAddr = brokerAddr;
             _port = port;
         }
-        public void Connect(string clientID, int keepAlive)
+        public string Connect(string clientID, int keepAlive)
         {
-            tcpClient = new TcpClient(_brokerAddr, _port);
-            networkStream = tcpClient.GetStream();
-            int payloadSize = 2 + Encoding.UTF8.GetByteCount(clientID); //LSB,MSB + clientid size
-            byte[] fixedHeader = { 0x10, (byte)(10 + payloadSize) }; //10 = variable header
-
-            byte[] variableHeader =
+            try
             {
+                tcpClient = new TcpClient(_brokerAddr, _port);
+                networkStream = tcpClient.GetStream();
+                int payloadSize = 2 + Encoding.UTF8.GetByteCount(clientID); //LSB,MSB + clientid size
+                byte[] fixedHeader = { 0x10, (byte)(10 + payloadSize) }; //10 = variable header
+
+                byte[] variableHeader =
+                {
                 0x00,0x04, //Protocol name length
                 0x4D, 0x51, 0x54, 0x54, //MQTT
                 0x04, //Protocol level
                 0x02, //CONNECT Flags
                 0x00, (byte)keepAlive //keep alive
             };
-            // Payload
-            byte[] clientIDBytes = Encoding.UTF8.GetBytes(clientID);
-            byte[] payload = new byte[2 + clientIDBytes.Length]; //LSB + MSB + ClientID
+                // Payload
+                byte[] clientIDBytes = Encoding.UTF8.GetBytes(clientID);
+                byte[] payload = new byte[2 + clientIDBytes.Length]; //LSB + MSB + ClientID
 
-            payload[0] = (byte)(clientIDBytes.Length >> 8);  // Client Identifier Length MSB
-            payload[1] = (byte)(clientIDBytes.Length & 0xFF);  // Client Identifier Length LSB
-            Array.Copy(clientIDBytes, 0, payload, 2, clientIDBytes.Length); //Paste in the bytes from clientID into the payload array
+                payload[0] = (byte)(clientIDBytes.Length >> 8);  // Client Identifier Length MSB
+                payload[1] = (byte)(clientIDBytes.Length & 0xFF);  // Client Identifier Length LSB
+                Array.Copy(clientIDBytes, 0, payload, 2, clientIDBytes.Length); //Paste in the bytes from clientID into the payload array
 
-            // Concatenate fixed header, variable header, and payload
-            byte[] connectPacket = new byte[fixedHeader.Length + variableHeader.Length + payload.Length];
-            Array.Copy(fixedHeader, 0, connectPacket, 0, fixedHeader.Length);
-            Array.Copy(variableHeader, 0, connectPacket, fixedHeader.Length, variableHeader.Length);
-            Array.Copy(payload, 0, connectPacket, fixedHeader.Length + variableHeader.Length, payload.Length);
-            SendPacket(connectPacket);
+                // Concatenate fixed header, variable header, and payload
+                byte[] connectPacket = new byte[fixedHeader.Length + variableHeader.Length + payload.Length];
+                Array.Copy(fixedHeader, 0, connectPacket, 0, fixedHeader.Length);
+                Array.Copy(variableHeader, 0, connectPacket, fixedHeader.Length, variableHeader.Length);
+                Array.Copy(payload, 0, connectPacket, fixedHeader.Length + variableHeader.Length, payload.Length);
+                if (SendPacket(connectPacket))
+                    return "Connected to MQTT";
+                else return "Connection Failed";
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
         public void Subscribe(string topic, int qos, int packetIdentfier)
         {
@@ -109,17 +118,17 @@ namespace MQTTClient
             }
 
         }
-        private void SendPacket(byte[] packet)
+        private bool SendPacket(byte[] packet)
         {
             try
             {
                 networkStream.Write(packet, 0, packet.Length);
                 networkStream.Flush();
+                return true;
 
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Console.WriteLine(e.Message);
                 throw;
             }
 

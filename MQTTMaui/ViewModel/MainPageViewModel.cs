@@ -5,8 +5,13 @@ namespace MQTTMaui.ViewModel
 {
     public partial class MainPageViewModel : ObservableObject
     {
+
+        private IClient client;
         [ObservableProperty]
-        string text;
+        string brokerAdress = "test.mosquitto.org";
+
+        [ObservableProperty]
+        int port = 1883;
 
         [ObservableProperty]
         string status;
@@ -14,12 +19,25 @@ namespace MQTTMaui.ViewModel
         [RelayCommand]
         void Connect()
         {
-            if (string.IsNullOrWhiteSpace(Text))
+            if (string.IsNullOrWhiteSpace(BrokerAdress) || Port <= 1)
                 return;
+            try
+            {
+                if(client == null)
+                {
+                    client = new Client(BrokerAdress, Port);
+                    Status = client.Connect("TESTID", 60);
+                    return;
+                }
+                if (Status.ToLower() == "connected to mqtt")
+                    return;
+                Status = client.Connect("TESTID", 60);
 
-            IClient client = new Client(Text, 1883);
-            client.Connect("TESTID", 60);
-            Text = string.Empty;
+            }
+            catch (Exception e)
+            {
+                Status = e.Message;
+            }
         }
     }
 }
